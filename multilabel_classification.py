@@ -169,6 +169,40 @@ from sklearn.linear_model import LogisticRegression
 
 
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import GridSearchCV
+
+#
+# def train_classifier(X_train, y_train):
+#     """
+#       X_train, y_train — training data
+#
+#       return: trained classifier
+#     """
+#     # scaler = StandardScaler(with_mean=False)
+#     # scaler.fit(X_train)
+#
+#     # Create and fit LogisticRegression wraped into OneVsRestClassifier.
+#     # clf = OneVsRestClassifier(LogisticRegression(C=1, multi_class='ovr', max_iter=1000, solver='liblinear',
+#     #                                              class_weight='balanced'))
+#     model_to_set = OneVsRestClassifier(LogisticRegression(C =1, penalty='l1', class_weight='balanced'))
+#
+#     # Create regularization penalty space
+#     # Create regularization hyperparameter space
+#
+#     parameters = {
+#         "estimator__C": [0.1, 1, 10, 100],
+#         "estimator__penalty": ["l1", "l2"],
+#         "estimator__class_weight": [None,'balanced'],
+#     }
+#
+#     clf = GridSearchCV(model_to_set, param_grid=parameters,scoring='f1_weighted', verbose=4, n_jobs=-1)
+#
+#     clf.fit(X_train, y_train)
+#
+#     return clf #, scaler
+
+
+
 
 def train_classifier(X_train, y_train):
     """
@@ -180,11 +214,11 @@ def train_classifier(X_train, y_train):
     # scaler.fit(X_train)
 
     # Create and fit LogisticRegression wraped into OneVsRestClassifier.
-    clf = OneVsRestClassifier(LogisticRegression(C=1, multi_class='ovr', max_iter=1000, solver='liblinear',
-                                                 class_weight='balanced'))
+    clf = OneVsRestClassifier(LogisticRegression(C=1, class_weight=None, penalty='l1'))
     clf.fit(X_train, y_train)
 
     return clf #, scaler
+
 
 
 classifier_mybag = train_classifier(X_train_mybag, y_train)
