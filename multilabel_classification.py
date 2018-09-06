@@ -73,21 +73,6 @@ words_counts = Counter(' '.join(X_train).split(' '))
 
 
 sorted_words = sorted(words_counts.items(), key=lambda x: x[1], reverse=True)[:5000]
-# DICT_SIZE = 5000
-# # WORDS_TO_INDEX = ####### YOUR CODE HERE #######
-# # INDEX_TO_WORDS = ####### YOUR CODE HERE #######
-# INDEX_TO_WORDS = dict(enumerate(list(dict(sorted_words).keys())))
-# WORDS_TO_INDEX  = dict (zip(INDEX_TO_WORDS.values(),INDEX_TO_WORDS.keys()))
-#
-# words_to_index = {'hi': 0, 'you': 1, 'me': 2, 'are': 3}
-# text = 'hi how are you me hi hi hi me'
-# result_vector = np.zeros(4)
-#
-#
-# for each_word in text.split():
-#     print(each_word)
-#     if (each_word in words_to_index.keys()):
-#         result_vector[words_to_index.get(each_word)] = result_vector[words_to_index.get(each_word)] + 1
 
 
 
@@ -149,6 +134,7 @@ def tfidf_features(X_train, X_val, X_test):
 
 
     tfidf_vectorizer = TfidfVectorizer(min_df=5, max_df=0.9, ngram_range=(1, 2), use_idf=True, token_pattern=r'(\S+)')
+
     X_train = tfidf_vectorizer.fit_transform(X_train)
     X_test = tfidf_vectorizer.transform(X_test)
     X_val = tfidf_vectorizer.transform(X_val)
@@ -163,8 +149,77 @@ print('c#' in tfidf_reversed_vocab.values())
 print('c++' in tfidf_reversed_vocab.values())
 
 
+
 from sklearn.preprocessing import MultiLabelBinarizer
 
 mlb = MultiLabelBinarizer(classes=sorted(tags_counts.keys()))
 y_train = mlb.fit_transform(y_train)
 y_val = mlb.fit_transform(y_val)
+
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.linear_model import LogisticRegression
+
+
+# from sklearn.utils import class_weight
+# # In order to calculate the class weight do the following
+#
+# class_weights = class_weight.compute_class_weight('balanced',
+#                                                  np.unique(y_train),
+#                                                  y_train)
+
+
+from sklearn.preprocessing import StandardScaler
+
+def train_classifier(X_train, y_train):
+    """
+      X_train, y_train — training data
+
+      return: trained classifier
+    """
+    # scaler = StandardScaler(with_mean=False)
+    # scaler.fit(X_train)
+
+    # Create and fit LogisticRegression wraped into OneVsRestClassifier.
+    clf = OneVsRestClassifier(LogisticRegression(C=1, multi_class='ovr', max_iter=1000, solver='liblinear',
+                                                 class_weight='balanced'))
+    clf.fit(X_train, y_train)
+
+    return clf #, scaler
+
+
+classifier_mybag = train_classifier(X_train_mybag, y_train)
+classifier_tfidf = train_classifier(X_train_tfidf, y_train)
+
+y_val_predicted_labels_mybag = classifier_mybag.predict(X_val_mybag)
+y_val_predicted_scores_mybag = classifier_mybag.decision_function(X_val_mybag)
+
+y_val_predicted_labels_tfidf = classifier_tfidf.predict(X_val_tfidf)
+y_val_predicted_scores_tfidf = classifier_tfidf.decision_function(X_val_tfidf)
+
+
+y_val_pred_inversed = mlb.inverse_transform(y_val_predicted_labels_tfidf)
+y_val_inversed = mlb.inverse_transform(y_val)
+for i in range(3):
+    print('Title:\t{}\nTrue labels:\t{}\nPredicted labels:\t{}\n\n'.format(
+        X_val[i],
+        ','.join(y_val_inversed[i]),
+        ','.join(y_val_pred_inversed[i])
+    ))
+
+
+
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+
+
+def print_evaluation_scores(y_val, predicted):
+    print(f1_score(y_val, predicted, average="weighted"))
+    print(precision_score(y_val, predicted, average="weighted"))
+    print(recall_score(y_val, predicted, average="weighted"))
+    print(accuracy_score(y_val, predicted))
+
+
+print('Bag-of-words')
+print_evaluation_scores(y_val, y_val_predicted_labels_mybag)
+print('Tfidf')
+print_evaluation_scores(y_val, y_val_predicted_labels_tfidf)
+
