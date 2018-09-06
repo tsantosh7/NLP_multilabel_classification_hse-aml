@@ -223,3 +223,42 @@ print_evaluation_scores(y_val, y_val_predicted_labels_mybag)
 print('Tfidf')
 print_evaluation_scores(y_val, y_val_predicted_labels_tfidf)
 
+
+
+test_predictions = classifier_tfidf.predict(X_test_tfidf)
+test_pred_inversed = mlb.inverse_transform(test_predictions)
+
+
+def print_words_for_tag(classifier, tag, tags_classes, index_to_words, all_words):
+    """
+        classifier: trained classifier
+        tag: particular tag
+        tags_classes: a list of classes names from MultiLabelBinarizer
+        index_to_words: index_to_words transformation
+        all_words: all words in the dictionary
+
+        return nothing, just print top 5 positive and top 5 negative words for current tag
+    """
+    print('Tag:\t{}'.format(tag))
+
+    # Extract an estimator from the classifier for the given tag.
+    index_of_tag = tags_classes.index(tag)
+    estimators_of_tag = classifier_tfidf.coef_[index_of_tag]
+    # Extract feature coefficients from the estimator.
+    ind_of_estimators = np.argsort([estimators_of_tag])
+    # Extract feature coefficients from the estimator.
+
+    # top_positive_coefs =  estimators_of_tag[ind_of_estimators][:,-5:]# top-5 words sorted by the coefficiens.
+    # top_negative_coefs =  estimators_of_tag[ind_of_estimators][0,:5]
+
+    top_positive_words = [tfidf_reversed_vocab.get(key) for key in ind_of_estimators[:,-5:].tolist()[0]][::-1]
+    top_negative_words = [tfidf_reversed_vocab.get(key) for key in ind_of_estimators[0,:5].tolist()]
+
+    # bottom-5 words  sorted by the coefficients.
+    print('Top positive words:\t{}'.format(', '.join(top_positive_words)))
+    print('Top negative words:\t{}\n'.format(', '.join(top_negative_words)))
+
+
+print_words_for_tag(classifier_tfidf, 'c', mlb.classes, tfidf_reversed_vocab, ALL_WORDS)
+print_words_for_tag(classifier_tfidf, 'c++', mlb.classes, tfidf_reversed_vocab, ALL_WORDS)
+print_words_for_tag(classifier_tfidf, 'linux', mlb.classes, tfidf_reversed_vocab, ALL_WORDS)
